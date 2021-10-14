@@ -9,13 +9,18 @@ class TeamsController < ApplicationController
   def show
     @working_team = @team
     change_keep_team(current_user, @team)
+    @is_owner = is_owner?
   end
 
   def new
     @team = Team.new
   end
 
-  def edit; end
+  def edit
+    unless is_owner?
+      redirect_to @team, notice: I18n.t('views.messages.cannot_edit_team_no_permission')
+    end
+  end
 
   def create
     @team = Team.new(team_params)
@@ -36,6 +41,12 @@ class TeamsController < ApplicationController
       flash.now[:error] = I18n.t('views.messages.failed_to_save_team')
       render :edit
     end
+  end
+
+  def owner_change
+    @working_team.owner_id = params[:id]
+    @working_team.save
+    redirect_to team_path(@working_team)
   end
 
   def destroy
